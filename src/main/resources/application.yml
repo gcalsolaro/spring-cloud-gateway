@@ -1,0 +1,109 @@
+server:
+  port: 8060
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedHeaders: "*"
+            allowedMethods: "*"
+      discovery:
+        locator:
+          enabled: true
+      routes:
+      # EXAMPLE
+      - id: example-service
+        uri: http://localhost:8081
+        predicates:
+        - Path=/example/**
+        filters:
+        - CircuitBreaker=resilienceCircuitBreaker
+        - RewritePath=/example/(?<path>.*), /$\{path}
+        - RemoveRequestHeader=Authorization
+        - AddRequestHeader=Authorization, Basic ZGdpdC1nYXRlOnBlZ19RdzZVdWxhZkF4MlRuTkpfZ3c=
+        # da sistemare
+        metadata:
+          api_version: v1
+          
+      # Only 4 OAS3
+      - id: openapi
+        uri: http://localhost:8060
+        predicates:
+        - Path=/v3/api-docs/**
+        filters:
+        - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
+        - OpenApiDocFilter
+  
+springdoc:
+  swagger-ui:
+    doc-expansion: none
+    path: /swagger-ui.html
+    display-request-duration: true
+    
+# --- RESILIENCE4J PROPERTIES - EXPERIMENTAL --- #
+
+# CIRCUIT BREAKER
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      slidingWindowSize: 10
+      minimumNumberOfCalls: 5
+      permittedNumberOfCallsInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      waitDurationInOpenState: 2s
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 10
+      recordExceptions:
+        - org.springframework.web.client.HttpServerErrorException
+        - java.io.IOException
+      ignoreExceptions:
+        - java.lang.IllegalStateException
+    shared:
+      slidingWindowSize: 100
+      permittedNumberOfCallsInHalfOpenState: 30
+      waitDurationInOpenState: 1s
+      failureRateThreshold: 50
+      eventConsumerBufferSize: 10
+      ignoreExceptions:
+        - java.lang.IllegalStateException
+  instances:
+    resilienceCircuitBreaker:
+      baseConfig: default
+      
+# TIME LIMITER
+resilience4j.timelimiter:
+  configs:
+    default:
+      timeout-duration: 5s
+  instances:
+    resilienceCircuitBreaker:
+      base-config: default
+
+# RATE LIMITER
+resilience4j.ratelimiter:
+  configs:
+    default:
+      limitForPeriod: 2
+      limitRefreshPeriod: 1s
+      timeoutDuration: 1s
+  instances:
+    resilienceCircuitBreaker:
+      base-config: default
+      
+# RETRY
+resilience4j.retry:
+  configs:
+    default:
+      max-attempts: 3
+      wait-duration: 3s
+      retry-exceptions:
+        - java.lang.Exception
+  instances:
+    resilienceCircuitBreaker:
+      base-config: default
