@@ -1,5 +1,6 @@
 package com.gcalsolaro.spring.cloud.gateway.filter.cache;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -10,9 +11,11 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class HttpRequestBodyCachingFilter implements WebFilter {
 
@@ -21,10 +24,11 @@ public class HttpRequestBodyCachingFilter implements WebFilter {
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
+		final String originalUri = exchange.getRequest().getURI().toString();
 		HttpMethod method = exchange.getRequest().getMethod();
 
 		// GET and DELETE don't have a body
-		if (method == null || method.matches(HttpMethod.GET.name()) || method.matches(HttpMethod.DELETE.name())) {
+		if (this.isSkippableUri(originalUri) || method == null || method.matches(HttpMethod.GET.name()) || method.matches(HttpMethod.DELETE.name())) {
 			return chain.filter(exchange);
 		}
 
@@ -46,5 +50,21 @@ public class HttpRequestBodyCachingFilter implements WebFilter {
 			};
 			return chain.filter(exchange.mutate().request(decorator).build());
 		});
+	}
+	
+	/**
+	 * Check if current URI is skippable from Caching
+	 * 
+	 * @param originalUri
+	 * @return
+	 */
+	private boolean isSkippableUri(String originalUri) {
+		String[] skippable = new String[] { ".html", ".css", ".js", ".png", ".ico", ".map", "/v3/api-docs/swagger-config", "/v3/api-docs/example", "primaryName=example", "/v3/api-docs" };
+		if (StringUtils.endsWithAny(originalUri, skippable)) {
+			log.debug("Caching GatewayFilter logging: incoming request " + originalUri + " - Skip from Cache...");
+			return true;
+		}
+		log.debug("Caching GatewayFilter logging: incoming request " + originalUri + " - Not Skippable! Caching if necessary...");
+		return false;
 	}
 }

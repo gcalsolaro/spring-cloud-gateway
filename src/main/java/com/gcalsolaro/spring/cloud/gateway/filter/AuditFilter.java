@@ -6,6 +6,7 @@ import java.nio.channels.Channels;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
@@ -89,7 +90,7 @@ public class AuditFilter implements WebFilter {
 				log.info("Audit GatewayFilter: request with Auth parameters incoming! Principal(sub): " + loggedUser.getPrincipal() + " - aud: " + loggedUser.getAud() + " - jti: " + loggedUser.getJti());
 				log.info("Audit GatewayFilter: response HttpStatus " + exchange.getResponse().getStatusCode());
 
-				// TODO - your auth logic here
+				// TODO - your auth tracking logic here
 			} else {
 				log.error("Fatal - Expected Authorization not found! Something goes wrong...");
 				throw new UnauthorizedException("Fatal - Expected Authorization not found!");
@@ -107,7 +108,12 @@ public class AuditFilter implements WebFilter {
 	 * @return
 	 */
 	private boolean isSkippableUri(String originalUri) {
-		// TODO - your logic here
+		String[] skippable = new String[] { ".html", ".css", ".js", ".png", ".ico", ".map", "/v3/api-docs/swagger-config", "/v3/api-docs/example", "primaryName=example", "/v3/api-docs" };
+		if (StringUtils.endsWithAny(originalUri, skippable)) {
+			log.debug("Audit GatewayFilter logging: incoming request " + originalUri + " - Skip from Auth...");
+			return true;
+		}
+		log.debug("Audit GatewayFilter logging: incoming request " + originalUri + " - Not Skippable! Check Auth...");
 		return false;
 	}
 }

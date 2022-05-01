@@ -43,7 +43,6 @@ public class SecurityConfig {
 			.cors();
 		
 		// Those that do not require jwt token authentication should be pass.
-		// TODO verificare la home page
 		http.authorizeExchange().pathMatchers(Constants.OAS3_API_DOCS_PATH).permitAll();
 
 		// Apply a JWT custom filter to all /** apis.
