@@ -11,7 +11,7 @@ import lombok.Getter;
 @ResponseStatus(value = HttpStatus.UNAUTHORIZED)
 public class UnauthorizedException extends RuntimeException {
 
-	private static final long serialVersionUID = -5569877952326544185L;
+	private static final long serialVersionUID = 1L;
 	private final String message;
 
 }

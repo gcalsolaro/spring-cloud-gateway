@@ -18,6 +18,8 @@ import lombok.Getter;
 @Getter
 @Configuration
 public class AppConfig {
+	
+	// TODO - your config props here
 
 	@Bean
 	public static PropertySourcesPlaceholderConfigurer propertyConfigInDev() {

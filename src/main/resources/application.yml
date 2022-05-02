@@ -1,5 +1,5 @@
 server:
-  port: 8060
+  port: 8080
 spring:
   application:
     name: gateway-service
@@ -25,10 +25,10 @@ spring:
         filters:
         - CircuitBreaker=resilienceCircuitBreaker
         - RewritePath=/example/(?<path>.*), /$\{path}
-        - RemoveRequestHeader=Authorization
-        - AddRequestHeader=Authorization, Basic ZGdpdC1nYXRlOnBlZ19RdzZVdWxhZkF4MlRuTkpfZ3c=
-        # da sistemare
+        - RemoveRequestHeader=Authorization # to strip jwt auth bearer before route the request
+        - AddRequestHeader=Authorization, Basic dXNlcjpwYXNzd29yZA== # to add Basic Auth before route the request
         metadata:
+          # add here your custom metadata
           api_version: v1
           
       # Only 4 OAS3
@@ -38,7 +38,7 @@ spring:
         - Path=/v3/api-docs/**
         filters:
         - RewritePath=/v3/api-docs/(?<path>.*), /$\{path}/v3/api-docs
-        - OpenApiDocFilter
+        - OpenApiDocFilter # to modify OAS3 response as json
   
 springdoc:
   swagger-ui:
