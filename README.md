@@ -1,7 +1,7 @@
 
 # Spring Boot Cloud Gateway
 
-![Java CI with Maven](https://github.com/gcalsolaro/spring-boot-grpc/workflows/Java%20CI%20with%20Maven/badge.svg)
+[![Java CI with Maven](https://github.com/gcalsolaro/spring-cloud-gateway/actions/workflows/maven.yml/badge.svg)](https://github.com/gcalsolaro/spring-cloud-gateway/actions/workflows/maven.yml)
 > **Sample Gateway Application powered by Spring Cloud 2021.0.1**
 
 
