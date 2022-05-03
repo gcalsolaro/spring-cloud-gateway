@@ -33,7 +33,7 @@ spring:
           
       # Only 4 OAS3
       - id: openapi
-        uri: http://localhost:8060
+        uri: http://localhost:8080
         predicates:
         - Path=/v3/api-docs/**
         filters:

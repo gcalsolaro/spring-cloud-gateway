@@ -31,7 +31,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.gcalsolaro.spring.cloud.gateway.Constants;
 
@@ -145,8 +147,23 @@ public class OpenApiDocFilter extends ModifyResponseBodyGatewayFilterFactory {
 							// TODO - your manipulation logic here. Manipulate as json
 						}
 					});
+					
+					// FIXME - Example - Infer Gateway Server
+					this.inferServer(json);
 
 					return json;
+				}
+				
+				/**
+				 * 
+				 * @param json
+				 */
+				private void inferServer(ObjectNode json) {
+					URI routeUri = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR);
+					JsonNode pathsJsonNode = json.findValue(Constants.OAS3_SERVERS);
+					ObjectNode server = (ObjectNode) ((ArrayNode) pathsJsonNode).get(0);
+					server.put(Constants.OAS3_URL, StringUtils.remove(routeUri.toString(), Constants.OAS3_API_DOCS_PATH));
+					server.put(Constants.OAS3_DESCRIPTION, Constants.OAS3_SERVERS_URL_DESCRIPTION);
 				}
 				
 				/**
